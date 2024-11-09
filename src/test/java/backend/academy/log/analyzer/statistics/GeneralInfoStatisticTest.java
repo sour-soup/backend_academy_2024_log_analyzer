@@ -2,11 +2,12 @@ package backend.academy.log.analyzer.statistics;
 
 import backend.academy.log.analyzer.model.LogRecord;
 import backend.academy.log.analyzer.model.StatisticResult;
+import java.util.List;
+import org.instancio.Instancio;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import java.time.OffsetDateTime;
-import java.util.List;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.instancio.Select.field;
 
 class GeneralInfoStatisticTest {
     @Test
@@ -14,19 +15,11 @@ class GeneralInfoStatisticTest {
     void getResult_CorrectlyCalculatesAverageAndPercentile() {
         // Arrange
         List<String> fileNames = List.of("file1", "file2");
-        OffsetDateTime startDate = OffsetDateTime.parse("2024-11-01T00:00:00+00:00");
-        OffsetDateTime endDate = OffsetDateTime.parse("2024-11-02T00:00:00+00:00");
-        GeneralInfoStatistic statistic = new GeneralInfoStatistic(fileNames, startDate, endDate);
+        GeneralInfoStatistic statistic = new GeneralInfoStatistic(fileNames, null, null);
 
-        statistic.collect(new LogRecord(
-            "192.168.0.1", "user1", OffsetDateTime.now(), "GET /test", 200, 512, "https://example.com", "Mozilla/5.0"
-        ));
-        statistic.collect(new LogRecord(
-            "192.168.0.2", "user2", OffsetDateTime.now(), "GET /test", 200, 2048, "https://example.com", "Mozilla/5.0"
-        ));
-        statistic.collect(new LogRecord(
-            "192.168.0.3", "user3", OffsetDateTime.now(), "GET /test", 200, 512, "https://example.com", "Mozilla/5.0"
-        ));
+        statistic.collect(createLogRecord(512));
+        statistic.collect(createLogRecord(2048));
+        statistic.collect(createLogRecord(512));
 
         // Act
         StatisticResult result = statistic.getResult();
@@ -53,9 +46,7 @@ class GeneralInfoStatisticTest {
     void getResult_HandlesEmptyResponseSizes() {
         // Arrange
         List<String> fileNames = List.of("file1");
-        OffsetDateTime startDate = OffsetDateTime.parse("2024-11-01T00:00:00+00:00");
-        OffsetDateTime endDate = OffsetDateTime.parse("2024-11-02T00:00:00+00:00");
-        GeneralInfoStatistic statistic = new GeneralInfoStatistic(fileNames, startDate, endDate);
+        GeneralInfoStatistic statistic = new GeneralInfoStatistic(fileNames, null, null);
 
         // Act
         StatisticResult result = statistic.getResult();
@@ -74,9 +65,7 @@ class GeneralInfoStatisticTest {
         List<String> fileNames = List.of("file1");
         GeneralInfoStatistic statistic = new GeneralInfoStatistic(fileNames, null, null);
 
-        statistic.collect(new LogRecord(
-            "192.168.0.1", "user1", OffsetDateTime.now(), "GET /test", 200, 1024, "https://example.com", "Mozilla/5.0"
-        ));
+        statistic.collect(createLogRecord(1024));
 
         // Act
         StatisticResult result = statistic.getResult();
@@ -91,5 +80,11 @@ class GeneralInfoStatisticTest {
             .filteredOn(row -> row.getFirst().equals("Конечная дата"))
             .extracting(row -> row.get(1))
             .containsExactly("-");
+    }
+
+    private LogRecord createLogRecord(int bodyBytesSent) {
+        return Instancio.of(LogRecord.class)
+            .set(field("bodyBytesSent"), bodyBytesSent)
+            .create();
     }
 }
