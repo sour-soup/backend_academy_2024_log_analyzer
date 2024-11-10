@@ -16,7 +16,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class LogStatisticCollectorTest {
+class LogStatisticsCollectorTest {
     private Statistic mockStatistic1;
     private Statistic mockStatistic2;
     private StatisticsCollector collector;
@@ -25,7 +25,7 @@ class LogStatisticCollectorTest {
     void setUp() {
         mockStatistic1 = mock(Statistic.class);
         mockStatistic2 = mock(Statistic.class);
-        collector = new LogStatisticCollector(List.of(mockStatistic1, mockStatistic2));
+        collector = new LogStatisticsCollector(List.of(mockStatistic1, mockStatistic2));
     }
 
     @Test

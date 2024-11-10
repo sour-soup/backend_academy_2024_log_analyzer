@@ -8,10 +8,10 @@ import backend.academy.log.analyzer.utils.StatisticFormatter;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class LogStatisticCollector implements StatisticsCollector {
+public class LogStatisticsCollector implements StatisticsCollector {
     private final List<Statistic> statistics;
 
-    public LogStatisticCollector(List<Statistic> statistics) {
+    public LogStatisticsCollector(List<Statistic> statistics) {
         this.statistics = statistics;
     }
 
