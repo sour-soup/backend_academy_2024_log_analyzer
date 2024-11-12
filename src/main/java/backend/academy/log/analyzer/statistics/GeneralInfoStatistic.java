@@ -2,17 +2,20 @@ package backend.academy.log.analyzer.statistics;
 
 import backend.academy.log.analyzer.model.LogRecord;
 import backend.academy.log.analyzer.model.StatisticResult;
+import com.datadoghq.sketch.ddsketch.DDSketch;
+import com.datadoghq.sketch.ddsketch.DDSketches;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class GeneralInfoStatistic implements Statistic {
+    private static final double RELATIVE_ACCURACY = 0.1;
     private static final double PERCENTILE = 0.95;
-    private final List<Integer> responseSizes = new ArrayList<>();
+    private final DDSketch sketch = DDSketches.unboundedDense(RELATIVE_ACCURACY);
     private final List<String> fileNames;
     private final OffsetDateTime startDate;
     private final OffsetDateTime endDate;
+    private int countRequests = 0;
+    private long totalSize = 0;
 
     public GeneralInfoStatistic(List<String> fileNames, OffsetDateTime startDate, OffsetDateTime endDate) {
         this.fileNames = fileNames;
@@ -22,16 +25,13 @@ public class GeneralInfoStatistic implements Statistic {
 
     @Override
     public void collect(LogRecord logRecord) {
-        responseSizes.add(logRecord.bodyBytesSent());
+        ++countRequests;
+        totalSize += logRecord.bodyBytesSent();
+        sketch.accept(logRecord.bodyBytesSent());
     }
 
     @Override
     public StatisticResult getResult() {
-        Collections.sort(responseSizes);
-        int countRequests = responseSizes.size();
-        long totalSize = responseSizes.stream().mapToLong(i -> i).sum();
-        int index = (int) Math.ceil(responseSizes.size() * PERCENTILE) - 1;
-
         String name = "Общая информация";
         List<String> header = List.of("Метрика", "Значение");
         List<List<String>> rows = List.of(
@@ -40,7 +40,7 @@ public class GeneralInfoStatistic implements Statistic {
             List.of("Конечная дата", (endDate == null ? "-" : endDate.toString())),
             List.of("Количество запросов", String.valueOf(countRequests)),
             List.of("Средний размер ответа", totalSize / (countRequests == 0 ? 1 : countRequests) + "b"),
-            List.of("95-й персентиль размера ответа", (countRequests == 0 ? 0 : responseSizes.get(index)) + "b")
+            List.of("95-й перцентиль размера ответа", sketch.getValueAtQuantile(PERCENTILE) + "b")
         );
         return new StatisticResult(name, header, rows);
     }
