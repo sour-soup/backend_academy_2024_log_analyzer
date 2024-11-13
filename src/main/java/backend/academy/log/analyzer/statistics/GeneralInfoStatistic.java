@@ -32,6 +32,7 @@ public class GeneralInfoStatistic implements Statistic {
 
     @Override
     public StatisticResult getResult() {
+
         String name = "Общая информация";
         List<String> header = List.of("Метрика", "Значение");
         List<List<String>> rows = List.of(
@@ -39,8 +40,10 @@ public class GeneralInfoStatistic implements Statistic {
             List.of("Начальная дата", (startDate == null ? "-" : startDate.toString())),
             List.of("Конечная дата", (endDate == null ? "-" : endDate.toString())),
             List.of("Количество запросов", String.valueOf(countRequests)),
-            List.of("Средний размер ответа", totalSize / (countRequests == 0 ? 1 : countRequests) + "b"),
-            List.of("95-й перцентиль размера ответа", sketch.getValueAtQuantile(PERCENTILE) + "b")
+            List.of("Средний размер ответа",
+                totalSize / (countRequests == 0 ? 1 : countRequests) + "b"),
+            List.of("95-й перцентиль размера ответа",
+                (countRequests == 0 ? 0 : sketch.getValueAtQuantile(PERCENTILE)) + "b")
         );
         return new StatisticResult(name, header, rows);
     }

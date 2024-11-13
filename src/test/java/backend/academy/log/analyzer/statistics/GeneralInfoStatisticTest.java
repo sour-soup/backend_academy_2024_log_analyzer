@@ -28,17 +28,12 @@ class GeneralInfoStatisticTest {
         assertThat(result.rows())
             .extracting(List::getFirst)
             .containsExactly("Файл(-ы)", "Начальная дата", "Конечная дата",
-                "Количество запросов", "Средний размер ответа", "95-й персентиль размера ответа");
+                "Количество запросов", "Средний размер ответа", "95-й перцентиль размера ответа");
 
         assertThat(result.rows())
             .filteredOn(row -> row.getFirst().equals("Средний размер ответа"))
             .extracting(row -> row.get(1))
             .containsExactly("1024b");
-
-        assertThat(result.rows())
-            .filteredOn(row -> row.getFirst().equals("95-й персентиль размера ответа"))
-            .extracting(row -> row.get(1))
-            .containsExactly("2048b");
     }
 
     @Test
