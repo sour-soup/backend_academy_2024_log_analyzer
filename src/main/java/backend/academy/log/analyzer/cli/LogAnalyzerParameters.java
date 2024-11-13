@@ -36,7 +36,7 @@ public class LogAnalyzerParameters {
     private ReportFormat format = ReportFormat.MARKDOWN;
 
     @Parameter(names = "--filter-field",
-        description = "LogRecord field to filter by (optional)")
+        description = "LogRecord field to filter by (optional). Available fields: remoteAddress, remoteUser, request, httpReferer, httpUserAgent.")
     private String filterField;
 
     @Parameter(names = "--filter-value",
