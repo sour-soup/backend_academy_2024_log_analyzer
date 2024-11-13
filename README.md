@@ -1,137 +1,61 @@
-# Шаблон Java-проекта для домашних заданий
+### Log Analyzer
 
-Шаблон для домашних заданий [Академии Бэкенда 2024][course-url].
+Log Analyzer — это CLI-приложение для анализа логов Nginx, позволяющее фильтровать данные по разным параметрам и создавать отчеты в форматах Markdown и AsciiDoc. Программа поддерживает указание нескольких путей к логам, `glob` выражения для поиска файлов, а также URL-адреса для удаленных логов.
 
-Цель данного репозитория – познакомить вас с процессом разработки приложений на
-Java с использованием наиболее распространенных практик, инструментов и
-библиотек.
+#### Основной функционал
 
-## Структура проекта
+1. **Фильтрация по времени**: возможность указать начальную и конечную дату с помощью параметров `--from` и `--to` в формате ISO-8601.
+2. **Фильтрация по полям**: поддержка фильтрации логов по полям `remoteAddress`, `remoteUser`, `request`, `httpReferer` и `httpUserAgent` с использованием регулярных выражений.
+3. **Формат отчета**: генерация отчета в формате `markdown` или `adoc`.
+4. **Поддержка нескольких путей к логам**: параметр `--path` позволяет указать несколько файловых путей, `glob` выражений и URL-адресов. Программа обработает все указанные источники.
 
-Это типовой Java-проект, который собирается с помощью инструмента автоматической
-сборки проектов [Apache Maven](https://maven.apache.org/).
+#### Сборка приложения
 
-Проект состоит из следующих директорий и файлов:
+Приложение собирается в `fat JAR` с названием `analyzer.jar` с использованием плагина `maven-shade-plugin`.
 
-- [pom.xml](./pom.xml) – дескриптор сборки, используемый maven, или Project
-  Object Model. В нем описаны зависимости проекта и шаги по его сборке
-- [src/](./src) – директория, которая содержит исходный код приложения и его
-  тесты:
-  - [src/main/](./src/main) – здесь находится код вашего приложения
-  - [src/test/](./src/test) – здесь находятся тесты вашего приложения
-- [mvnw](./mvnw) и [mvnw.cmd](./mvnw.cmd) – скрипты maven wrapper для Unix и
-  Windows, которые позволяют запускать команды maven без локальной установки
-- [checkstyle.xml](checkstyle.xml),
-  [checkstyle-suppression.xml](checkstyle-suppression.xml), [pmd.xml](pmd.xml) и
-  [spotbugs-excludes.xml](spotbugs-excludes.xml) – в проекте используются
-  [линтеры](https://en.wikipedia.org/wiki/Lint_%28software%29) для контроля
-  качества кода. Указанные файлы содержат правила для используемых линтеров
-- [.mvn/](./.mvn) – служебная директория maven, содержащая конфигурационные
-  параметры сборщика
-- [lombok.config](lombok.config) – конфигурационный файл
-  [Lombok](https://projectlombok.org/), библиотеки помогающей избежать рутинного
-  написания шаблонного кода
-- [.editorconfig](.editorconfig) – файл с описанием настроек форматирования кода
-- [.github/workflows/build.yml](.github/workflows/build.yml) – файл с описанием
-  шагов сборки проекта в среде Github
-- [.gitattributes](.gitattributes), [.gitignore](.gitignore) – служебные файлы
-  для git, с описанием того, как обрабатывать различные файлы, и какие из них
-  игнорировать
+1. Убедитесь, что у вас установлен Maven.
+2. В корневом каталоге проекта выполните команду:
 
-## Начало работы
+   ```bash
+   mvn clean package
+   ```
 
-Подробнее о том, как приступить к разработке, описано в разделах
-[курса][course-url] `1.8 Настройка IDE`, `1.9 Работа с Git` и
-`1.10 Настройка SSH`.
+3. После завершения сборки `analyzer.jar` будет находиться в каталоге `target/`.
 
-Для того чтобы собрать проект, и проверить, что все работает корректно, можно
-запустить из модального окна IDEA
-[Run Anything](https://www.jetbrains.com/help/idea/running-anything.html)
-команду:
+#### Использование
 
-```shell
-mvn clean verify
+Запуск приложения осуществляется командой:
+
+```bash
+java -jar target/analyzer.jar [параметры]
 ```
 
-Альтернативно можно в терминале из корня проекта выполнить следующие команды.
+##### Доступные параметры
 
-Для Unix (Linux, macOS, Cygwin, WSL):
+- `--path` (обязательный): Пути к логам. Можно указать несколько значений, а также использовать `glob` выражения и URL-адреса.
+- `--from`: Дата начала анализа в формате ISO-8601 (например, `2023-01-01T00:00:00Z`).
+- `--to`: Дата окончания анализа в формате ISO-8601.
+- `--format`: Формат отчета. Возможные значения — `markdown` (по умолчанию) и `adoc`.
+- `--filter-field`: Поле, по которому будет выполняться фильтрация (`remoteAddress`, `remoteUser`, `request`, `httpReferer`, `httpUserAgent`).
+- `--filter-value`: Регулярное выражение для фильтрации по указанному полю.
+- `--help`: Показать справочную информацию.
 
-```shell
-./mvnw clean verify
-```
+##### Примеры
 
-Для Windows:
+1. **Анализ логов из нескольких файлов с использованием фильтрации по дате:**
 
-```shell
-mvnw.cmd clean verify
-```
+   ```bash
+   java -jar target/analyzer.jar --path "/logs/app*.log" --path "/logs/access.log" --path "https://example.com/logs/app.log" --from "2023-01-01T00:00:00Z" --to "2023-12-31T23:59:59Z"
+   ```
 
-Для окончания сборки потребуется подождать какое-то время, пока maven скачает
-все необходимые зависимости, скомпилирует проект и прогонит базовый набор
-тестов.
+2. **Фильтрация по полю `request` с регулярным выражением:**
 
-Если вы в процессе сборки получили ошибку:
+   ```bash
+   java -jar target/analyzer.jar --path "/logs/*.log" --filter-field "request" --filter-value ".*GET.*"
+   ```
 
-```shell
-Rule 0: org.apache.maven.enforcer.rules.version.RequireJavaVersion failed with message:
-JDK version must be at least 22
-```
+3. **Вывод отчета в формате `adoc` с несколькими источниками:**
 
-Значит, версия вашего JDK ниже 22.
-
-Если же получили ошибку:
-
-```shell
-Rule 1: org.apache.maven.enforcer.rules.version.RequireMavenVersion failed with message:
-Maven version should, at least, be 3.8.8
-```
-
-Значит, у вас используется версия maven ниже 3.8.8. Такого не должно произойти,
-если вы запускаете сборку из IDEA или через `mvnw`-скрипты.
-
-Далее будут перечислены другие полезные команды maven.
-
-Запуск только компиляции основных классов:
-
-```shell
-mvn compile
-```
-
-Запуск тестов:
-
-```shell
-mvn test
-```
-
-Запуск линтеров:
-
-```shell
-mvn checkstyle:check modernizer:modernizer spotbugs:check pmd:check pmd:cpd-check
-```
-
-Вывод дерева зависимостей проекта (полезно при отладке транзитивных
-зависимостей):
-
-```shell
-mvn dependency:tree
-```
-
-Вывод вспомогательной информации о любом плагине (вместо `compiler` можно
-подставить интересующий вас плагин):
-
-```shell
-mvn help:describe -Dplugin=compiler
-```
-
-## Дополнительные материалы
-
-- Документация по maven: https://maven.apache.org/guides/index.html
-- Поиск зависимостей и их версий: https://central.sonatype.com/search
-- Документация по процессу автоматизированной сборки в среде github:
-  https://docs.github.com/en/actions
-- Документация по git: https://git-scm.com/doc
-- Javadoc для Java 22:
-  https://docs.oracle.com/en/java/javase/22/docs/api/index.html
-
-[course-url]: https://edu.tinkoff.ru/all-activities/courses/870efa9d-7067-4713-97ae-7db256b73eab
+   ```bash
+   java -jar target/analyzer.jar --path "/logs/*.log" --path "https://example.com/logs/app.log" --format adoc
+   ```
