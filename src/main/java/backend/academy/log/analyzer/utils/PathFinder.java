@@ -1,6 +1,6 @@
 package backend.academy.log.analyzer.utils;
 
-import backend.academy.log.analyzer.exception.GlobPathFinderException;
+import backend.academy.log.analyzer.exception.PathFinderException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.nio.file.FileSystems;
@@ -47,7 +47,7 @@ public final class PathFinder {
                 .map(Path::toString)
                 .toList();
         } catch (IOException e) {
-            throw new GlobPathFinderException("Error while searching for files matching the glob pattern", e);
+            throw new PathFinderException("Error while searching for files matching the glob pattern", e);
         }
     }
 

@@ -1,6 +1,6 @@
 package backend.academy.log.analyzer.utils;
 
-import backend.academy.log.analyzer.exception.GlobPathFinderException;
+import backend.academy.log.analyzer.exception.PathFinderException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -112,7 +112,7 @@ class PathFinderTest {
 
         // Act & Assert
         assertThatThrownBy(() -> PathFinder.globPath(globPattern))
-            .isInstanceOf(GlobPathFinderException.class)
+            .isInstanceOf(PathFinderException.class)
             .hasMessageContaining("Error while searching for files matching the glob pattern");
     }
 }
