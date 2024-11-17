@@ -43,7 +43,7 @@ public final class PathFinder {
         PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + globPattern);
         try (Stream<Path> stream = Files.walk(basePath)) {
             return stream
-                .filter(matcher::matches)
+                .filter(path -> matcher.matches(basePath.relativize(path)))
                 .map(Path::toString)
                 .toList();
         } catch (IOException e) {
