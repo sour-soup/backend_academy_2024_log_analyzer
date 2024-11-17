@@ -2,62 +2,50 @@ package backend.academy.log.analyzer;
 
 import backend.academy.log.analyzer.cli.LogAnalyzerApp;
 import backend.academy.log.analyzer.cli.LogAnalyzerParameters;
-import backend.academy.log.analyzer.exception.GlobPathFinderException;
-import backend.academy.log.analyzer.exception.LogParserException;
-import backend.academy.log.analyzer.exception.StreamProviderException;
-import backend.academy.log.analyzer.parser.LogParser;
-import backend.academy.log.analyzer.parser.NginxLogParser;
-import backend.academy.log.analyzer.reader.LogReader;
-import backend.academy.log.analyzer.reader.NginxLogReader;
-import backend.academy.log.analyzer.statistics.GeneralInfoStatistic;
-import backend.academy.log.analyzer.statistics.HourStatistic;
-import backend.academy.log.analyzer.statistics.ResourcesStatistic;
-import backend.academy.log.analyzer.statistics.ResponseSizeStatistic;
-import backend.academy.log.analyzer.statistics.StatusCodesStatistic;
-import backend.academy.log.analyzer.statistics.collector.LogStatisticsCollector;
-import backend.academy.log.analyzer.statistics.collector.StatisticsCollector;
+import backend.academy.log.analyzer.config.AppModule;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
-import java.util.List;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import lombok.experimental.UtilityClass;
+import static backend.academy.log.analyzer.utils.PathFinder.getAllPaths;
 
 @SuppressWarnings("RegexpSinglelineJava")
 @UtilityClass
 public class Main {
     public static void main(String[] args) {
+        LogAnalyzerParameters parameters = parseCommandLineArgs(args);
+
+        try {
+            Injector injector = Guice.createInjector(new AppModule(parameters));
+
+            parameters.paths(getAllPaths(parameters.paths()));
+
+            LogAnalyzerApp app = injector.getInstance(LogAnalyzerApp.class);
+            String report = app.run();
+            System.out.println(report);
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+        }
+    }
+
+    private static LogAnalyzerParameters parseCommandLineArgs(String[] args) {
         LogAnalyzerParameters parameters = new LogAnalyzerParameters();
         JCommander jCommander = JCommander.newBuilder()
             .addObject(parameters)
             .build();
+
         try {
             jCommander.parse(args);
-
             if (parameters.help()) {
                 jCommander.usage();
-                return;
+                System.exit(0);
             }
-
-            LogParser parser = new NginxLogParser();
-            LogReader reader = new NginxLogReader(parser);
-            StatisticsCollector collector = createStatisticsCollector(parameters);
-
-            LogAnalyzerApp analyzer = new LogAnalyzerApp(parameters, reader, collector);
-
-            String report = analyzer.run();
-            System.out.println(report);
-        } catch (ParameterException | GlobPathFinderException | LogParserException | StreamProviderException e) {
-            System.err.println(e.getMessage());
+        } catch (ParameterException e) {
             jCommander.usage();
+            throw new IllegalArgumentException("Invalid arguments: " + e.getMessage(), e);
         }
-    }
 
-    private StatisticsCollector createStatisticsCollector(LogAnalyzerParameters parameters) {
-        return new LogStatisticsCollector(List.of(
-            new GeneralInfoStatistic(parameters.paths(), parameters.from(), parameters.to()),
-            new ResourcesStatistic(),
-            new StatusCodesStatistic(),
-            new ResponseSizeStatistic(),
-            new HourStatistic()
-        ));
+        return parameters;
     }
 }

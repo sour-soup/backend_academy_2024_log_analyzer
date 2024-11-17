@@ -4,11 +4,13 @@ import backend.academy.log.analyzer.model.LogRecord;
 import backend.academy.log.analyzer.parser.LogParser;
 import backend.academy.log.analyzer.utils.StreamProvider;
 import backend.academy.log.analyzer.utils.UrlChecker;
+import jakarta.inject.Inject;
 import java.util.stream.Stream;
 
 public class NginxLogReader implements LogReader {
     private final LogParser logParser;
 
+    @Inject
     public NginxLogReader(LogParser logParser) {
         this.logParser = logParser;
     }
