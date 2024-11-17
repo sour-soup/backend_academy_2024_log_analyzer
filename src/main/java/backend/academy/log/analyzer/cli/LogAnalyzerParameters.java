@@ -8,10 +8,14 @@ import com.beust.jcommander.Parameter;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.regex.Pattern;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class LogAnalyzerParameters {
     @Setter
     @Parameter(names = "--path",

@@ -5,10 +5,9 @@ import backend.academy.log.analyzer.reader.LogReader;
 import backend.academy.log.analyzer.statistics.collector.StatisticsCollector;
 import backend.academy.log.analyzer.utils.GlobPathFinder;
 import backend.academy.log.analyzer.utils.UrlChecker;
-import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import static backend.academy.log.analyzer.utils.FilterLogRecordUtils.applyFilters;
 
 public class LogAnalyzerApp {
     private final LogAnalyzerParameters parameters;
@@ -27,45 +26,11 @@ public class LogAnalyzerApp {
         Stream<LogRecord> logRecordStream = parameters.paths().stream()
             .flatMap(reader::readLogs);
 
-        Stream<LogRecord> filteredStream = applyFilters(logRecordStream);
+        Stream<LogRecord> filteredStream = applyFilters(parameters, logRecordStream);
 
         collector.collect(filteredStream);
 
         return collector.generateReport(parameters.format());
-    }
-
-    private Stream<LogRecord> applyFilters(Stream<LogRecord> logRecordStream) {
-        OffsetDateTime from = parameters.from();
-        OffsetDateTime to = parameters.to();
-        String filterField = parameters.filterField();
-        Pattern filterValue = parameters.filterValue();
-
-        Stream<LogRecord> filteredStream = logRecordStream;
-        if (from != null) {
-            filteredStream = filteredStream.filter(log -> !log.dateTime().isBefore(from));
-        }
-        if (to != null) {
-            filteredStream = filteredStream.filter(log -> !log.dateTime().isAfter(to));
-        }
-        if (filterField != null && filterValue != null) {
-            filteredStream = filteredStream.filter(log -> {
-                String fieldValue = getFieldValue(log, filterField);
-                return fieldValue != null && filterValue.matcher(fieldValue).matches();
-            });
-        }
-
-        return filteredStream;
-    }
-
-    private String getFieldValue(LogRecord logRecord, String fieldName) {
-        return switch (fieldName) {
-            case "remoteAddress" -> logRecord.remoteAddress();
-            case "remoteUser" -> logRecord.remoteUser();
-            case "request" -> logRecord.request();
-            case "httpReferer" -> logRecord.httpReferer();
-            case "httpUserAgent" -> logRecord.httpUserAgent();
-            default -> null;
-        };
     }
 
     private static List<String> getAllPaths(List<String> paths) {
