@@ -11,8 +11,19 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Stream;
 
-public final class GlobPathFinder {
-    private GlobPathFinder() {
+public final class PathFinder {
+    private PathFinder() {
+    }
+
+    public static List<String> getAllPaths(List<String> paths) {
+        return paths.stream()
+            .flatMap(path -> {
+                if (UrlChecker.isUrl(path)) {
+                    return Stream.of(path);
+                } else {
+                    return PathFinder.globPath(path).stream();
+                }
+            }).toList();
     }
 
     @SuppressFBWarnings("PATH_TRAVERSAL_IN")
@@ -21,19 +32,22 @@ public final class GlobPathFinder {
             return List.of(path);
         }
 
-        String basePathString = extractBaseDirectory(path);
-        Path basePath = Paths.get(basePathString);
-        String globPattern = path.substring(basePathString.length());
+        String baseDirectory = extractBaseDirectory(path);
+        Path basePath = Paths.get(baseDirectory);
+        String globPattern = path.substring(baseDirectory.length());
 
+        return findMatchingPaths(basePath, globPattern);
+    }
+
+    private static List<String> findMatchingPaths(Path basePath, String globPattern) {
         PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:" + globPattern);
-
         try (Stream<Path> stream = Files.walk(basePath)) {
             return stream
                 .filter(matcher::matches)
                 .map(Path::toString)
                 .toList();
         } catch (IOException e) {
-            throw new GlobPathFinderException("Error while searching for files matching the glob pattern: " + path, e);
+            throw new GlobPathFinderException("Error while searching for files matching the glob pattern", e);
         }
     }
 
